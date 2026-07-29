@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              Int      @id @default(autoincrement())
+  username        String   @unique
+  password        String
+  role              String   @default("USER") // ADMIN or USER
+  establecimientos  String?
+  createdAt         DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model ResumenSiniestro {
+  id                 Int      @id @default(autoincrement())
+  estabBase          String
+  mes                String
+  anio               String
+  tipoSiniestro      String
+  cantidadSiniestros Int
+  sumaDiasReposo     Int
+  createdAt          DateTime @default(now())
+}
+
+model Siniestro {
+  id                   Int      @id @default(autoincrement())
+  numero               String?
+  fechaPresentacion    String?
+  tipoSiniestroIngreso String?
+  ctpStp               String?
+  rutPaciente          String?
+  nombrePaciente       String?
+  establecimiento      String?
+  estabBase            String?
+  sector               String?
+  numeroSiniestro      String?
+  fechaSiniestro       String?
+  fechaInicioReposo    String?
+  fechaAltaOk          String?
+  dp                   String?
+  motivoAsistencia     String?
+  tipoAlta             String?
+  observaciones        String?
+  createdAt            DateTime @default(now())
+}
+
+model Homologacion {
+  id                   Int      @id @default(autoincrement())
+  establecimiento      String   @unique
+  estabBase            String
+  sector               String
+  cantidadTrabajadores Int      @default(0)
+  createdAt            DateTime @default(now())
+}
