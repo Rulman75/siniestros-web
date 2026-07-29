@@ -39,9 +39,12 @@ export default function LoginPage() {
   return (
     <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', minHeight: '100vh', padding: '1rem' }}>
       <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem' }}>
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 600, marginBottom: '0.5rem', textAlign: 'center' }}>
-          Bienvenido
-        </h1>
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
+          <img src="/Logo_CMDS.png" alt="Logo CMDS" style={{ maxWidth: '100%', maxHeight: '120px', objectFit: 'contain', marginBottom: '1rem' }} />
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center', color: 'var(--primary-color)', lineHeight: 1.3 }}>
+            Prevención de Riesgos CMDS
+          </h1>
+        </div>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', textAlign: 'center' }}>
           Inicia sesión para continuar
         </p>
