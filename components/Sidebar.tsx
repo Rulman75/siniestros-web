@@ -5,7 +5,7 @@ import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { getSessionUsername } from '@/app/actions';
 import Image from 'next/image';
-import logoImg from '../../public/logo.png';
+import logoImg from '../public/logo.png';
 
 export default function Sidebar({ isAdmin }: { isAdmin: boolean }) {
   const router = useRouter();
