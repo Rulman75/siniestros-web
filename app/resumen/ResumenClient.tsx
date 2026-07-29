@@ -39,7 +39,26 @@ export default function ResumenClient({ isAdmin, userEstablecimientos }: { isAdm
 
     const res = await fetch(`/api/siniestros/resumen?${params.toString()}`);
     const json = await res.json();
-    setData(json);
+    
+    // Map and aggregate "Incidente sin lesión" into "Accidente de Trabajo"
+    const mapped = json.map((d: Resumen) => ({
+      ...d,
+      tipoSiniestro: d.tipoSiniestro === 'Incidente sin lesión' ? 'Accidente de Trabajo' : d.tipoSiniestro
+    }));
+    
+    const aggregatedMap = new Map<string, Resumen>();
+    mapped.forEach((d: Resumen) => {
+      const key = `${d.estabBase}|${d.mes}|${d.anio}|${d.tipoSiniestro}`;
+      if (!aggregatedMap.has(key)) {
+        aggregatedMap.set(key, { ...d });
+      } else {
+        const curr = aggregatedMap.get(key)!;
+        curr.cantidadSiniestros += d.cantidadSiniestros;
+        curr.sumaDiasReposo += d.sumaDiasReposo;
+      }
+    });
+    
+    setData(Array.from(aggregatedMap.values()));
     setLoading(false);
   };
 
@@ -101,7 +120,7 @@ export default function ResumenClient({ isAdmin, userEstablecimientos }: { isAdm
     xlsx.writeFile(wb, `${fileName}.xlsx`);
   };
 
-  const tabs = ['Todos', 'Accidente de Trabajo', 'Accidente de Trayecto', 'Enfermedad Profesional', 'Incidente sin lesión'];
+  const tabs = ['Todos', 'Accidente de Trabajo', 'Accidente de Trayecto', 'Enfermedad Profesional'];
 
   const totalMensual = filteredData.reduce((acc, curr) => ({
     cantidad: acc.cantidad + curr.cantidadSiniestros,
