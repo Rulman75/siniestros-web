@@ -1,41 +1,45 @@
-'use client';
+﻿'use client';
 
 import { useState } from 'react';
 import { useRouter } from 'next/navigation';
-
 import Image from 'next/image';
 import logoImg from '../../public/logo.png';
 
-export default function LoginPage() {
+export default function ChangePasswordPage() {
   const router = useRouter();
-  const [username, setUsername] = useState('');
-  const [password, setPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     setError('');
 
+    if (newPassword.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      setError('Las contraseñas no coinciden');
+      return;
+    }
+
+    setLoading(true);
     try {
-      const res = await fetch('/api/auth/login', {
+      const res = await fetch('/api/auth/change-password', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ username, password })
+        body: JSON.stringify({ newPassword })
       });
 
       if (res.ok) {
-        const data = await res.json();
-        if (data.mustChangePassword) {
-          router.push('/change-password');
-        } else {
-          router.push('/');
-        }
+        alert('Contraseña actualizada con éxito. Ahora ingresarás al sistema.');
+        router.push('/');
         router.refresh();
       } else {
         const data = await res.json();
-        setError(data.message || 'Error al iniciar sesión');
+        setError(data.message || 'Error al actualizar contraseña');
       }
     } catch (err) {
       setError('Ocurrió un error inesperado');
@@ -49,37 +53,34 @@ export default function LoginPage() {
       <div className="glass-panel animate-fade-in" style={{ width: '100%', maxWidth: '400px', padding: '2.5rem' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginBottom: '1.5rem' }}>
           <Image src={logoImg} alt="Logo CMDS" style={{ maxWidth: '100%', height: 'auto', maxHeight: '120px', objectFit: 'contain', marginBottom: '1rem' }} />
-          <h1 style={{ fontSize: '1.75rem', fontWeight: 800, textAlign: 'center', color: 'var(--primary-color)', lineHeight: 1.3, textTransform: 'uppercase' }}>
-            ESTADISTICAS DE ACCIDENTABILIDAD
+          <h1 style={{ fontSize: '1.5rem', fontWeight: 700, textAlign: 'center', color: 'var(--primary-color)', lineHeight: 1.3 }}>
+            Cambio de Contraseña
           </h1>
-          <p style={{ color: 'var(--text-secondary)', fontSize: '1rem', fontWeight: 500, marginTop: '0.25rem', textAlign: 'center' }}>
-            Departamento de Prevención de Riesgos
-          </p>
         </div>
         <p style={{ color: 'var(--text-secondary)', marginBottom: '2rem', textAlign: 'center' }}>
-          Inicia sesión para continuar
+          Por seguridad, debes cambiar tu contraseña predeterminada para continuar.
         </p>
 
         <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
           <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Usuario</label>
-            <input 
-              type="text" 
-              className="input-field" 
-              placeholder="Ingresa tu usuario"
-              value={username}
-              onChange={(e) => setUsername(e.target.value)}
-              required
-            />
-          </div>
-          <div>
-            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Contraseña</label>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Nueva Contraseña</label>
             <input 
               type="password" 
               className="input-field" 
               placeholder="••••••••"
-              value={password}
-              onChange={(e) => setPassword(e.target.value)}
+              value={newPassword}
+              onChange={(e) => setNewPassword(e.target.value)}
+              required
+            />
+          </div>
+          <div>
+            <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.875rem' }}>Confirmar Contraseña</label>
+            <input 
+              type="password" 
+              className="input-field" 
+              placeholder="••••••••"
+              value={confirmPassword}
+              onChange={(e) => setConfirmPassword(e.target.value)}
               required
             />
           </div>
@@ -96,7 +97,7 @@ export default function LoginPage() {
             style={{ width: '100%', marginTop: '0.5rem' }}
             disabled={loading}
           >
-            {loading ? 'Iniciando...' : 'Iniciar Sesión'}
+            {loading ? 'Actualizando...' : 'Actualizar y Entrar'}
           </button>
         </form>
       </div>

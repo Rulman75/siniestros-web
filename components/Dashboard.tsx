@@ -167,26 +167,14 @@ export default function Dashboard({ isAdmin, userEstablecimientos, isAccidentabi
 
   return (
     <div className="animate-fade-in">
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '2rem' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '2rem' }}>
         <div>
-          {!isAccidentabilidad ? (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
-              <img src="/logo.png" alt="Logo CMDS" style={{ height: '80px', objectFit: 'contain' }} />
-              <div>
-                <h1 style={{ fontSize: '2rem', fontWeight: 800, textTransform: 'uppercase', color: 'var(--primary-color)' }}>
-                  ESTADISTICAS DE ACCIDENTABILIDAD
-                </h1>
-                <p style={{ color: 'var(--text-secondary)', fontSize: '1.1rem', fontWeight: 500 }}>
-                  Departamento de Prevención de Riesgos
-                </p>
-              </div>
-            </div>
-          ) : (
-            <>
-              <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>Accidentabilidad</h1>
-              <p style={{ color: 'var(--text-secondary)' }}>Registro detallado de accidentabilidad por establecimiento</p>
-            </>
-          )}
+          <h1 style={{ fontSize: '2rem', fontWeight: 700 }}>
+            {isAccidentabilidad ? 'Accidentabilidad' : 'Datos Cargados'}
+          </h1>
+          <p style={{ color: 'var(--text-secondary)' }}>
+            {isAccidentabilidad ? 'Registro detallado de accidentabilidad por establecimiento' : 'Visualiza e inspecciona la información importada'}
+          </p>
         </div>
         <div style={{ display: 'flex', gap: '1rem' }}>
           <button onClick={exportExcel} className="btn" style={{ background: 'var(--success-color)', color: 'white' }}>

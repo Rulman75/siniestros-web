@@ -14,12 +14,12 @@ export async function POST(request: Request) {
     const { username, password, role, action, userId, establecimientos } = await request.json();
 
     if (action === 'reset' && userId) {
-      const hashed = await hashPassword('123456'); // default reset password
+      const hashed = await hashPassword('12345678'); // default reset password
       await prisma.user.update({
         where: { id: userId },
-        data: { password: hashed }
+        data: { password: hashed, mustChangePassword: true }
       });
-      return NextResponse.json({ message: 'Contraseña reseteada a: 123456' });
+      return NextResponse.json({ message: 'Contraseña reseteada a: 12345678' });
     }
 
     if (action === 'delete' && userId) {
@@ -28,9 +28,16 @@ export async function POST(request: Request) {
     }
 
     // Default create
-    const hashed = await hashPassword(password);
+    const defaultPassword = password || '12345678';
+    const hashed = await hashPassword(defaultPassword);
     const user = await prisma.user.create({
-      data: { username, password: hashed, role, establecimientos: role === 'USER' ? JSON.stringify(establecimientos || []) : null }
+      data: { 
+        username, 
+        password: hashed, 
+        role, 
+        establecimientos: role === 'USER' ? JSON.stringify(establecimientos || []) : null,
+        mustChangePassword: true
+      }
     });
     return NextResponse.json({ message: 'Usuario creado', user });
   } catch (err) {

@@ -29,10 +29,14 @@ export async function POST(request: Request) {
       id: user.id,
       username: user.username,
       role: user.role,
-      establecimientos: user.establecimientos ? JSON.parse(user.establecimientos) : []
+      establecimientos: user.establecimientos ? JSON.parse(user.establecimientos) : [],
+      mustChangePassword: user.mustChangePassword
     });
 
-    const response = NextResponse.json({ message: 'Login successful' });
+    const response = NextResponse.json({ 
+      message: 'Login successful',
+      mustChangePassword: user.mustChangePassword
+    });
     response.cookies.set({
       name: 'token',
       value: token,

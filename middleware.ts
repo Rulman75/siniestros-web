@@ -23,6 +23,10 @@ export async function middleware(request: NextRequest) {
     }
 
     if (payload) {
+      // Check for mandatory password change
+      if (payload.mustChangePassword === true && request.nextUrl.pathname !== '/change-password' && request.nextUrl.pathname !== '/api/auth/change-password' && !isPublicRoute) {
+        return NextResponse.redirect(new URL('/change-password', request.url));
+      }
       // If user is trying to access login page while authenticated
       if (request.nextUrl.pathname === '/login') {
         return NextResponse.redirect(new URL('/', request.url));
