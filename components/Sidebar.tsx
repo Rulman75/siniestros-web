@@ -4,6 +4,8 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useRouter, usePathname } from 'next/navigation';
 import { getSessionUsername } from '@/app/actions';
+import Image from 'next/image';
+import logoImg from '../../public/logo.png';
 
 export default function Sidebar({ isAdmin }: { isAdmin: boolean }) {
   const router = useRouter();
@@ -30,7 +32,7 @@ export default function Sidebar({ isAdmin }: { isAdmin: boolean }) {
   return (
     <aside className="sidebar">
       <div className="sidebar-title" style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.5rem', borderBottom: '1px solid var(--border-color)', paddingBottom: '1.5rem' }}>
-        <img src="/logo.png" alt="Logo CMDS" style={{ maxWidth: '100%', maxHeight: '140px', objectFit: 'contain', marginBottom: '0.5rem' }} />
+        <Image src={logoImg} alt="Logo CMDS" style={{ maxWidth: '100%', height: 'auto', maxHeight: '140px', objectFit: 'contain', marginBottom: '0.5rem' }} />
         <span style={{ fontSize: '1rem', color: 'var(--text-secondary)', textAlign: 'center', fontWeight: 600 }}>Sistema de Siniestros</span>
         {username && (
           <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.8rem', color: 'var(--primary-color)', background: '#e0f2fe', padding: '4px 12px', borderRadius: '12px', marginTop: '0.25rem' }}>
