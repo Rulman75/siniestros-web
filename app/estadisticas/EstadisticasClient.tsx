@@ -10,6 +10,7 @@ type Siniestro = {
   tipoSiniestroIngreso: string;
   dp: string;
   estabBase: string;
+  establecimiento: string;
 };
 
 type Homologacion = {
