@@ -238,7 +238,7 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
                 </h3>
                 <div style={{ height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ bottom: 80, right: 10, left: 10 }}>
+                    <BarChart data={chartData} margin={{ bottom: 120, right: 10, left: 10, top: 20 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-45} textAnchor="end" />
                       <YAxis />
