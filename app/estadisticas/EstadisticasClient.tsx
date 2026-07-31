@@ -238,7 +238,7 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
                 </h3>
                 <div style={{ height: 300 }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData}>
+                    <BarChart data={chartData} margin={{ bottom: 80, right: 10, left: 10 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-45} textAnchor="end" />
                       <YAxis />
@@ -338,12 +338,12 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
                 </h2>
                 <div style={{ height: '550px', width: '100%' }}>
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={chartData} margin={{ top: 20, right: 30, left: 20, bottom: 80 }}>
+                    <BarChart data={chartData} margin={{ top: 30, right: 30, left: 20, bottom: 120 }}>
                       <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#e2e8f0" />
                       <XAxis dataKey="name" tick={{ fontSize: 13 }} interval={0} angle={-45} textAnchor="end" />
                       <YAxis tick={{ fontSize: 14 }} />
                       <Tooltip contentStyle={{ borderRadius: '8px', border: 'none', boxShadow: '0 4px 15px rgba(0,0,0,0.1)' }} />
-                      <Legend wrapperStyle={{ paddingTop: '40px' }} />
+                      <Legend verticalAlign="top" wrapperStyle={{ paddingBottom: '20px' }} />
                       <Bar dataKey={config.dataKey} fill={config.color} name={config.name} radius={[4, 4, 0, 0]} label={{ position: 'top', fill: '#64748b', fontSize: 12 }} />
                     </BarChart>
                   </ResponsiveContainer>
