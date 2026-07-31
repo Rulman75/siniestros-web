@@ -109,7 +109,11 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
       return { ...estab, meses: mesesCalculados, total: totalCalculado };
     });
 
-    return result.sort((a, b) => a.estabBase.localeCompare(b.estabBase));
+    return result.sort((a, b) => {
+      const sectorCompare = a.sector.localeCompare(b.sector);
+      if (sectorCompare !== 0) return sectorCompare;
+      return a.estabBase.localeCompare(b.estabBase);
+    });
   }, [data, activeTab]);
 
   const exportExcel = () => {
@@ -256,8 +260,8 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
             <table style={{ borderCollapse: 'collapse', minWidth: '3500px', fontSize: '0.8rem', textAlign: 'center' }}>
               <thead>
                 <tr>
-                  <th rowSpan={2} style={{ background: '#f8fafc', position: 'sticky', left: 0, zIndex: 2, minWidth: '80px', borderBottom: '2px solid #cbd5e1' }}>Unidad</th>
-                  <th rowSpan={2} style={{ background: '#f8fafc', position: 'sticky', left: '80px', zIndex: 2, minWidth: '150px', borderRight: '2px solid #cbd5e1', borderBottom: '2px solid #cbd5e1' }}>Sector</th>
+                  <th rowSpan={2} style={{ background: '#f8fafc', position: 'sticky', left: 0, zIndex: 2, minWidth: '150px', borderBottom: '2px solid #cbd5e1' }}>Sector</th>
+                  <th rowSpan={2} style={{ background: '#f8fafc', position: 'sticky', left: '150px', zIndex: 2, minWidth: '80px', borderRight: '2px solid #cbd5e1', borderBottom: '2px solid #cbd5e1' }}>Unidad</th>
                   <th rowSpan={2} style={{ background: '#f8fafc', borderRight: '2px solid #cbd5e1', minWidth: '80px', borderBottom: '2px solid #cbd5e1' }}>N° Trab</th>
                   
                   {meses.map(m => (
@@ -283,8 +287,8 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
               <tbody>
                 {groupedData.map(d => (
                   <tr key={d.estabBase} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ background: 'white', position: 'sticky', left: 0, zIndex: 1, fontWeight: 'bold', padding: '10px 4px' }}>{d.estabBase}</td>
-                    <td style={{ background: 'white', position: 'sticky', left: '80px', zIndex: 1, borderRight: '2px solid #cbd5e1', padding: '10px 4px' }}>{d.sector}</td>
+                    <td style={{ background: 'white', position: 'sticky', left: 0, zIndex: 1, padding: '10px 4px' }}>{d.sector}</td>
+                    <td style={{ background: 'white', position: 'sticky', left: '150px', zIndex: 1, borderRight: '2px solid #cbd5e1', fontWeight: 'bold', padding: '10px 4px' }}>{d.estabBase}</td>
                     <td style={{ borderRight: '2px solid #cbd5e1', fontWeight: 'bold', padding: '10px 4px' }}>{d.trabajadores}</td>
                     
                     {d.meses.map((m: any, idx: number) => (
