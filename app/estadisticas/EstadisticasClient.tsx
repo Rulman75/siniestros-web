@@ -35,6 +35,11 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
   const [activeTab, setActiveTab] = useState('Accidente de Trabajo');
   const [chartSector, setChartSector] = useState('Todos');
   const [expandedChart, setExpandedChart] = useState<string | null>(null);
+  const [expandedRows, setExpandedRows] = useState<Record<string, boolean>>({});
+  
+  const toggleRow = (estabBase: string) => {
+    setExpandedRows(prev => ({ ...prev, [estabBase]: !prev[estabBase] }));
+  };
   
   const tabs = ['Accidente de Trabajo', 'Enfermedad Profesional', 'Accidente de Trayecto'];
 
@@ -67,11 +72,18 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
           sector: h.sector,
           trabajadores: 0,
           meses: Array.from({ length: 12 }, () => ({ acc: 0, dp: 0 })),
-          total: { acc: 0, dp: 0 }
+          total: { acc: 0, dp: 0 },
+          subRows: new Map()
         });
       }
       const estab = map.get(h.estabBase);
       estab.trabajadores += h.cantidadTrabajadores;
+      estab.subRows.set(h.establecimiento, {
+        establecimiento: h.establecimiento,
+        trabajadores: h.cantidadTrabajadores,
+        meses: Array.from({ length: 12 }, () => ({ acc: 0, dp: 0 })),
+        total: { acc: 0, dp: 0 }
+      });
     });
 
     const filtered = data.siniestros.filter(s => s.tipoSiniestroIngreso === activeTab);
@@ -79,6 +91,8 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
     filtered.forEach(s => {
       const estab = map.get(s.estabBase);
       if (!estab) return;
+
+      const sub = estab.subRows.get(s.establecimiento);
 
       const parts = s.fechaPresentacion.split('-');
       if (parts.length >= 2) {
@@ -94,21 +108,38 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
           if (!isNaN(dpVal) && dpVal > 0) {
             estab.total.dp += dpVal;
           }
+
+          if (sub) {
+            sub.meses[mIdx].acc += 1;
+            if (!isNaN(dpVal) && dpVal > 0) {
+              sub.meses[mIdx].dp += dpVal;
+            }
+            sub.total.acc += 1;
+            if (!isNaN(dpVal) && dpVal > 0) {
+              sub.total.dp += dpVal;
+            }
+          }
         }
       }
     });
 
     const result = Array.from(map.values()).map((estab: any) => {
-      const calc = (acc: number, dp: number) => {
-        const tacc = estab.trabajadores > 0 ? (acc / estab.trabajadores) : 0;
-        const tsin = estab.trabajadores > 0 ? (dp * 100 / estab.trabajadores) : 0;
+      const calc = (acc: number, dp: number, trab: number) => {
+        const tacc = trab > 0 ? (acc / trab) : 0;
+        const tsin = trab > 0 ? (dp * 100 / trab) : 0;
         return { tacc: tacc.toFixed(2), tsin: tsin.toFixed(2) };
       };
 
-      const mesesCalculados = estab.meses.map((m: any) => ({ ...m, ...calc(m.acc, m.dp) }));
-      const totalCalculado = { ...estab.total, ...calc(estab.total.acc, estab.total.dp) };
+      const mesesCalculados = estab.meses.map((m: any) => ({ ...m, ...calc(m.acc, m.dp, estab.trabajadores) }));
+      const totalCalculado = { ...estab.total, ...calc(estab.total.acc, estab.total.dp, estab.trabajadores) };
       
-      return { ...estab, meses: mesesCalculados, total: totalCalculado };
+      const subRowsList = Array.from(estab.subRows.values()).map((sub: any) => {
+        const subMeses = sub.meses.map((m: any) => ({ ...m, ...calc(m.acc, m.dp, sub.trabajadores) }));
+        const subTotal = { ...sub.total, ...calc(sub.total.acc, sub.total.dp, sub.trabajadores) };
+        return { ...sub, meses: subMeses, total: subTotal };
+      }).sort((a: any, b: any) => a.establecimiento.localeCompare(b.establecimiento));
+
+      return { ...estab, meses: mesesCalculados, total: totalCalculado, subRows: subRowsList };
     });
 
     return result.sort((a, b) => {
@@ -121,7 +152,8 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
   const exportExcel = () => {
     if (groupedData.length === 0) return alert('No hay datos para exportar');
     
-    const rows = groupedData.map(d => {
+    const rows: any[] = [];
+    groupedData.forEach(d => {
       const row: any = {
         'UNIDADES': d.estabBase,
         'SECTOR': d.sector,
@@ -141,7 +173,29 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
       row['TOTAL TACC'] = Number(d.total.tacc);
       row['TOTAL TSIN'] = Number(d.total.tsin);
 
-      return row;
+      rows.push(row);
+
+      if (d.subRows && d.subRows.length > 1) {
+        d.subRows.forEach((sub: any) => {
+          const subRow: any = {
+            'UNIDADES': `  ↳ ${sub.establecimiento}`,
+            'SECTOR': '',
+            'N TRAB': sub.trabajadores
+          };
+          sub.meses.forEach((m: any, idx: number) => {
+            const prefix = meses[idx];
+            subRow[`${prefix} ACC`] = m.acc;
+            subRow[`${prefix} DP`] = m.dp;
+            subRow[`${prefix} TACC`] = Number(m.tacc);
+            subRow[`${prefix} TSIN`] = Number(m.tsin);
+          });
+          subRow['TOTAL ACC'] = sub.total.acc;
+          subRow['TOTAL DP'] = sub.total.dp;
+          subRow['TOTAL TACC'] = Number(sub.total.tacc);
+          subRow['TOTAL TSIN'] = Number(sub.total.tsin);
+          rows.push(subRow);
+        });
+      }
     });
 
     const ws = xlsx.utils.json_to_sheet(rows);
@@ -288,25 +342,60 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
               </thead>
               <tbody>
                 {groupedData.map(d => (
-                  <tr key={d.estabBase} style={{ borderBottom: '1px solid #e2e8f0' }}>
-                    <td style={{ background: 'white', position: 'sticky', left: 0, zIndex: 1, padding: '10px 4px' }}>{d.sector}</td>
-                    <td style={{ background: 'white', position: 'sticky', left: '150px', zIndex: 1, borderRight: '2px solid #cbd5e1', fontWeight: 'bold', padding: '10px 4px' }}>{d.estabBase}</td>
-                    <td style={{ borderRight: '2px solid #cbd5e1', fontWeight: 'bold', padding: '10px 4px' }}>{d.trabajadores}</td>
-                    
-                    {d.meses.map((m: any, idx: number) => (
-                      <Fragment key={idx}>
-                        <td style={{ padding: '10px 4px' }}>{m.acc}</td>
-                        <td style={{ padding: '10px 4px' }}>{m.dp}</td>
-                        <td style={{ padding: '10px 4px' }}>{m.tacc}</td>
-                        <td style={{ padding: '10px 4px', borderRight: '1px solid #cbd5e1' }}>{m.tsin}</td>
-                      </Fragment>
-                    ))}
+                  <Fragment key={d.estabBase}>
+                    <tr style={{ borderBottom: '1px solid #e2e8f0', background: expandedRows[d.estabBase] ? '#f8fafc' : 'white' }}>
+                      <td style={{ background: 'inherit', position: 'sticky', left: 0, zIndex: 1, padding: '10px 4px' }}>{d.sector}</td>
+                      <td style={{ background: 'inherit', position: 'sticky', left: '150px', zIndex: 1, borderRight: '2px solid #cbd5e1', fontWeight: 'bold', padding: '10px 4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                          {d.subRows && d.subRows.length > 1 && (
+                            <button onClick={() => toggleRow(d.estabBase)} style={{ background: 'var(--primary-color)', border: 'none', borderRadius: '4px', cursor: 'pointer', fontSize: '1rem', color: 'white', width: '20px', height: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              {expandedRows[d.estabBase] ? '−' : '+'}
+                            </button>
+                          )}
+                          {d.estabBase}
+                        </div>
+                      </td>
+                      <td style={{ borderRight: '2px solid #cbd5e1', fontWeight: 'bold', padding: '10px 4px' }}>{d.trabajadores}</td>
+                      
+                      {d.meses.map((m: any, idx: number) => (
+                        <Fragment key={idx}>
+                          <td style={{ padding: '10px 4px' }}>{m.acc}</td>
+                          <td style={{ padding: '10px 4px' }}>{m.dp}</td>
+                          <td style={{ padding: '10px 4px' }}>{m.tacc}</td>
+                          <td style={{ padding: '10px 4px', borderRight: '1px solid #cbd5e1' }}>{m.tsin}</td>
+                        </Fragment>
+                      ))}
 
-                    <td style={{ padding: '10px 4px', background: '#f8fafc', fontWeight: 'bold', color: '#0369a1' }}>{d.total.acc}</td>
-                    <td style={{ padding: '10px 4px', background: '#f8fafc', fontWeight: 'bold', color: '#854d0e' }}>{d.total.dp}</td>
-                    <td style={{ padding: '10px 4px', background: '#f8fafc', fontWeight: 'bold', color: '#be185d' }}>{d.total.tacc}</td>
-                    <td style={{ padding: '10px 4px', background: '#f8fafc', fontWeight: 'bold', color: '#166534' }}>{d.total.tsin}</td>
-                  </tr>
+                      <td style={{ padding: '10px 4px', background: '#f8fafc', fontWeight: 'bold', color: '#0369a1' }}>{d.total.acc}</td>
+                      <td style={{ padding: '10px 4px', background: '#f8fafc', fontWeight: 'bold', color: '#854d0e' }}>{d.total.dp}</td>
+                      <td style={{ padding: '10px 4px', background: '#f8fafc', fontWeight: 'bold', color: '#be185d' }}>{d.total.tacc}</td>
+                      <td style={{ padding: '10px 4px', background: '#f8fafc', fontWeight: 'bold', color: '#166534' }}>{d.total.tsin}</td>
+                    </tr>
+                    
+                    {expandedRows[d.estabBase] && d.subRows && d.subRows.length > 1 && d.subRows.map((sub: any) => (
+                      <tr key={sub.establecimiento} style={{ borderBottom: '1px solid #e2e8f0', background: '#f1f5f9', fontSize: '0.75rem' }}>
+                        <td style={{ background: 'inherit', position: 'sticky', left: 0, zIndex: 1, padding: '8px 4px', color: '#64748b' }}></td>
+                        <td style={{ background: 'inherit', position: 'sticky', left: '150px', zIndex: 1, borderRight: '2px solid #cbd5e1', padding: '8px 4px', color: '#334155', textAlign: 'left', paddingLeft: '1.5rem' }}>
+                          ↳ {sub.establecimiento}
+                        </td>
+                        <td style={{ borderRight: '2px solid #cbd5e1', padding: '8px 4px', color: '#334155' }}>{sub.trabajadores}</td>
+                        
+                        {sub.meses.map((m: any, idx: number) => (
+                          <Fragment key={`sub-${idx}`}>
+                            <td style={{ padding: '8px 4px', color: '#475569' }}>{m.acc}</td>
+                            <td style={{ padding: '8px 4px', color: '#475569' }}>{m.dp}</td>
+                            <td style={{ padding: '8px 4px', color: '#475569' }}>{m.tacc}</td>
+                            <td style={{ padding: '8px 4px', borderRight: '1px solid #cbd5e1', color: '#475569' }}>{m.tsin}</td>
+                          </Fragment>
+                        ))}
+
+                        <td style={{ padding: '8px 4px', background: '#e2e8f0', color: '#0369a1' }}>{sub.total.acc}</td>
+                        <td style={{ padding: '8px 4px', background: '#e2e8f0', color: '#854d0e' }}>{sub.total.dp}</td>
+                        <td style={{ padding: '8px 4px', background: '#e2e8f0', color: '#be185d' }}>{sub.total.tacc}</td>
+                        <td style={{ padding: '8px 4px', background: '#e2e8f0', color: '#166534' }}>{sub.total.tsin}</td>
+                      </tr>
+                    ))}
+                  </Fragment>
                 ))}
               </tbody>
             </table>
