@@ -65,11 +65,13 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
         map.set(h.estabBase, {
           estabBase: h.estabBase,
           sector: h.sector,
-          trabajadores: h.cantidadTrabajadores,
+          trabajadores: 0,
           meses: Array.from({ length: 12 }, () => ({ acc: 0, dp: 0 })),
           total: { acc: 0, dp: 0 }
         });
       }
+      const estab = map.get(h.estabBase);
+      estab.trabajadores += h.cantidadTrabajadores;
     });
 
     const filtered = data.siniestros.filter(s => s.tipoSiniestroIngreso === activeTab);
