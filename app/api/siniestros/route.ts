@@ -14,6 +14,7 @@ export async function GET(request: Request) {
 
     const { searchParams } = new URL(request.url);
     const mes = searchParams.get('mes');
+    const mesAcumulado = searchParams.get('mesAcumulado');
     const anio = searchParams.get('anio');
     const tipoSiniestro = searchParams.get('tipoSiniestro');
     let establecimiento = searchParams.get('establecimiento');
@@ -39,6 +40,13 @@ export async function GET(request: Request) {
     // If mes is '01' and anio is '2026', we look for '-01-2026'
     if (mes && anio) {
       where.fechaPresentacion = { contains: `-${mes}-${anio}` };
+    } else if (mesAcumulado && anio) {
+      const limit = parseInt(mesAcumulado, 10);
+      if (!isNaN(limit)) {
+        where.OR = Array.from({ length: limit }, (_, i) => ({
+          fechaPresentacion: { contains: `-${(i + 1).toString().padStart(2, '0')}-${anio}` }
+        }));
+      }
     } else if (mes) {
       where.fechaPresentacion = { contains: `-${mes}-` };
     } else if (anio) {

@@ -32,6 +32,7 @@ const getMonthName = (m: string) => {
 
 export default function Dashboard({ isAdmin, userEstablecimientos, isAccidentabilidad }: Props) {
   const [data, setData] = useState<Siniestro[]>([]);
+  const [dataAcumulada, setDataAcumulada] = useState<Siniestro[]>([]);
   const [loading, setLoading] = useState(true);
   const [procesando, setProcesando] = useState(false);
   const [establecimientos, setEstablecimientos] = useState<string[]>([]);
@@ -55,6 +56,17 @@ export default function Dashboard({ isAdmin, userEstablecimientos, isAccidentabi
     const res = await fetch(`/api/siniestros?${params.toString()}`);
     const json = await res.json();
     setData(json);
+
+    if (filters.mes && isAccidentabilidad) {
+        const paramsAcum = new URLSearchParams(params.toString());
+        paramsAcum.delete('mes');
+        paramsAcum.append('mesAcumulado', filters.mes);
+        const resAcum = await fetch(`/api/siniestros?${paramsAcum.toString()}`);
+        const jsonAcum = await resAcum.json();
+        setDataAcumulada(jsonAcum);
+    } else {
+        setDataAcumulada(json);
+    }
 
     // Get total workers
     const resTrab = await fetch(`/api/trabajadores?${params.toString()}`);
@@ -131,7 +143,7 @@ export default function Dashboard({ isAdmin, userEstablecimientos, isAccidentabi
     xlsx.writeFile(wb, `Siniestros_${filters.mes ? getMonthName(filters.mes) : 'Todos'}_${filters.anio}.xlsx`);
   };
 
-  const calcKPIs = () => {
+  const calcKPIs = (dataset: Siniestro[]) => {
     if (totalTrabajadores === 0) return { frecuencia: 0, gravedad: 0, accidentabilidad: 0, siniestralidad: 0 };
     
     let ctpCount = 0;
@@ -139,7 +151,7 @@ export default function Dashboard({ isAdmin, userEstablecimientos, isAccidentabi
     let accTrabajoCount = 0;
     let accTrayectoCount = 0;
 
-    data.forEach(s => {
+    dataset.forEach(s => {
       const dp = parseInt(s.dp, 10);
       const isDpValido = !isNaN(dp);
       
@@ -158,12 +170,13 @@ export default function Dashboard({ isAdmin, userEstablecimientos, isAccidentabi
     return {
       frecuencia: (ctpCount * 100) / totalTrabajadores,
       gravedad: (diasPerdidos * 100) / totalTrabajadores,
-      accidentabilidad: data.length / totalTrabajadores,
+      accidentabilidad: dataset.length / totalTrabajadores,
       siniestralidad: (accTrabajoCount + accTrayectoCount) / totalTrabajadores
     };
   };
 
-  const kpis = calcKPIs();
+  const kpis = calcKPIs(data);
+  const kpisAcumulada = calcKPIs(dataAcumulada);
 
   return (
     <div className="animate-fade-in">
@@ -236,27 +249,53 @@ export default function Dashboard({ isAdmin, userEstablecimientos, isAccidentabi
       </div>
 
       {isAccidentabilidad && (
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-          <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #016098' }}>
-            <h4 style={{ color: '#016098', marginBottom: '0.5rem', fontSize: '0.875rem' }}>FRECUENCIA</h4>
-            <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpis.frecuencia.toFixed(2)}</div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '2rem', marginBottom: '2rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+            <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #016098' }}>
+              <h4 style={{ color: '#016098', marginBottom: '0.5rem', fontSize: '0.875rem' }}>{filters.mes ? 'FRECUENCIA MENSUAL' : 'FRECUENCIA'}</h4>
+              <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpis.frecuencia.toFixed(2)}</div>
+            </div>
+            <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #39BABD' }}>
+              <h4 style={{ color: '#39BABD', marginBottom: '0.5rem', fontSize: '0.875rem' }}>{filters.mes ? 'GRAVEDAD MENSUAL' : 'GRAVEDAD'}</h4>
+              <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpis.gravedad.toFixed(2)}</div>
+            </div>
+            <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #F7A517' }}>
+              <h4 style={{ color: '#F7A517', marginBottom: '0.5rem', fontSize: '0.875rem' }}>{filters.mes ? 'ACCIDENTABILIDAD MENSUAL' : 'ACCIDENTABILIDAD'}</h4>
+              <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpis.accidentabilidad.toFixed(2)}</div>
+            </div>
+            <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #EB567F' }}>
+              <h4 style={{ color: '#EB567F', marginBottom: '0.5rem', fontSize: '0.875rem' }}>{filters.mes ? 'SINIESTRALIDAD MENSUAL' : 'SINIESTRALIDAD'}</h4>
+              <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpis.siniestralidad.toFixed(2)}</div>
+            </div>
+            <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', background: '#016098', color: 'white', borderTop: '4px solid #014d7a' }}>
+              <h4 style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '0.5rem', fontSize: '0.875rem' }}>TRABAJADORES (Total)</h4>
+              <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{totalTrabajadores}</div>
+            </div>
           </div>
-          <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #39BABD' }}>
-            <h4 style={{ color: '#39BABD', marginBottom: '0.5rem', fontSize: '0.875rem' }}>GRAVEDAD</h4>
-            <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpis.gravedad.toFixed(2)}</div>
-          </div>
-          <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #F7A517' }}>
-            <h4 style={{ color: '#F7A517', marginBottom: '0.5rem', fontSize: '0.875rem' }}>ACCIDENTABILIDAD</h4>
-            <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpis.accidentabilidad.toFixed(2)}</div>
-          </div>
-          <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #EB567F' }}>
-            <h4 style={{ color: '#EB567F', marginBottom: '0.5rem', fontSize: '0.875rem' }}>SINIESTRALIDAD</h4>
-            <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpis.siniestralidad.toFixed(2)}</div>
-          </div>
-          <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', background: '#016098', color: 'white', borderTop: '4px solid #014d7a' }}>
-            <h4 style={{ color: 'rgba(255,255,255,0.8)', marginBottom: '0.5rem', fontSize: '0.875rem' }}>TRABAJADORES (Total)</h4>
-            <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{totalTrabajadores}</div>
-          </div>
+          
+          {filters.mes && (
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1.5rem' }}>
+              <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #016098' }}>
+                <h4 style={{ color: '#016098', marginBottom: '0.5rem', fontSize: '0.875rem' }}>FRECUENCIA ACUMULADA</h4>
+                <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpisAcumulada.frecuencia.toFixed(2)}</div>
+              </div>
+              <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #39BABD' }}>
+                <h4 style={{ color: '#39BABD', marginBottom: '0.5rem', fontSize: '0.875rem' }}>GRAVEDAD ACUMULADA</h4>
+                <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpisAcumulada.gravedad.toFixed(2)}</div>
+              </div>
+              <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #F7A517' }}>
+                <h4 style={{ color: '#F7A517', marginBottom: '0.5rem', fontSize: '0.875rem' }}>ACCIDENTABILIDAD ACUMULADA</h4>
+                <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpisAcumulada.accidentabilidad.toFixed(2)}</div>
+              </div>
+              <div className="glass-panel" style={{ padding: '1.5rem', textAlign: 'center', borderTop: '4px solid #EB567F' }}>
+                <h4 style={{ color: '#EB567F', marginBottom: '0.5rem', fontSize: '0.875rem' }}>SINIESTRALIDAD ACUMULADA</h4>
+                <div style={{ fontSize: '1.75rem', fontWeight: 'bold', color: '#1e293b' }}>{kpisAcumulada.siniestralidad.toFixed(2)}</div>
+              </div>
+              <div style={{ opacity: 0, pointerEvents: 'none', padding: '1.5rem' }}>
+                 {/* Empty space to align with the 5-column grid above if needed, or simply let it flow */}
+              </div>
+            </div>
+          )}
         </div>
       )}
 
