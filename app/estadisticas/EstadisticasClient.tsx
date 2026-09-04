@@ -314,11 +314,11 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
 
           <div className="glass-panel" style={{ padding: '1.5rem', overflowX: 'auto' }}>
             <h3 style={{ marginBottom: '1rem', color: 'var(--primary-color)' }}>Matriz de Datos: {activeTab}</h3>
-            <table style={{ borderCollapse: 'collapse', minWidth: '3500px', fontSize: '0.8rem', textAlign: 'center' }}>
+            <table style={{ borderCollapse: 'separate', borderSpacing: 0, minWidth: '3500px', fontSize: '0.8rem', textAlign: 'center' }}>
               <thead>
                 <tr>
-                  <th rowSpan={2} style={{ background: '#f8fafc', position: 'sticky', left: 0, zIndex: 2, minWidth: '150px', borderBottom: '2px solid #cbd5e1' }}>Sector</th>
-                  <th rowSpan={2} style={{ background: '#f8fafc', position: 'sticky', left: '150px', zIndex: 2, minWidth: '80px', borderRight: '2px solid #cbd5e1', borderBottom: '2px solid #cbd5e1' }}>Unidad</th>
+                  <th rowSpan={2} style={{ background: '#f8fafc', position: 'sticky', left: 0, zIndex: 20, minWidth: '150px', borderBottom: '2px solid #cbd5e1' }}>Sector</th>
+                  <th rowSpan={2} style={{ background: '#f8fafc', position: 'sticky', left: '150px', zIndex: 20, minWidth: '80px', borderRight: '2px solid #cbd5e1', borderBottom: '2px solid #cbd5e1' }}>Unidad</th>
                   <th rowSpan={2} style={{ background: '#f8fafc', borderRight: '2px solid #cbd5e1', minWidth: '80px', borderBottom: '2px solid #cbd5e1' }}>N° Trab</th>
                   
                   {meses.map(m => (
