@@ -1,5 +1,6 @@
 import { cookies } from 'next/headers';
 import { verifyJWT } from '@/lib/auth';
+import { redirect } from 'next/navigation';
 import Sidebar from '@/components/Sidebar';
 import Dashboard from '@/components/Dashboard';
 
@@ -9,6 +10,10 @@ export default async function HomePage() {
   const payload = token ? await verifyJWT(token) : null;
   const isAdmin = payload?.role === 'ADMIN';
   const userEstablecimientos = payload?.establecimientos as string[] | undefined;
+
+  if (!isAdmin) {
+    redirect('/accidentabilidad');
+  }
 
   return (
     <div className="app-layout">
