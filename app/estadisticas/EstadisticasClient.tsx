@@ -282,7 +282,7 @@ export default function EstadisticasClient({ isAdmin }: { isAdmin: boolean }) {
              </select>
           </div>
 
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(400px, 1fr))', gap: '2rem', marginBottom: '3rem' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(min(100%, 400px), 1fr))', gap: '2rem', marginBottom: '3rem' }}>
             {chartConfigs.map(config => (
               <div 
                 key={config.id} 

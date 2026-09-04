@@ -111,6 +111,7 @@ a {
   margin: 0 auto;
   padding: 2rem;
   width: 100%;
+  min-width: 0;
 }
 
 .app-layout {
@@ -172,6 +173,7 @@ a {
   display: flex;
   flex-direction: column;
   width: calc(100% - 260px);
+  min-width: 0; /* Prevent flex items from overflowing horizontally */
 }
 
 /* Tables */
@@ -215,4 +217,128 @@ tbody tr:hover {
 
 .animate-fade-in {
   animation: fadeIn 0.4s ease forwards;
+}
+
+/* Sidebar Specific */
+.sidebar-title {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  padding-bottom: 1.5rem;
+}
+
+.sidebar-logo {
+  max-width: 100%;
+  height: auto;
+  max-height: 140px;
+  object-fit: contain;
+  margin-bottom: 0.5rem;
+}
+
+.sidebar-app-name {
+  font-size: 1rem;
+  color: var(--text-secondary);
+  text-align: center;
+  font-weight: 600;
+}
+
+.sidebar-user-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  color: var(--primary-color);
+  background: #e0f2fe;
+  padding: 4px 12px;
+  border-radius: 12px;
+  margin-top: 0.25rem;
+}
+
+.status-dot {
+  width: 6px;
+  height: 6px;
+  background: var(--success-color);
+  border-radius: 50%;
+}
+
+.mobile-header {
+  display: none;
+}
+
+.mobile-overlay {
+  display: none;
+}
+
+/* Responsive Overrides */
+@media (max-width: 900px) {
+  .app-layout {
+    flex-direction: column;
+  }
+  
+  .mobile-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 1rem 1.5rem;
+    background: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  
+  .mobile-menu-btn {
+    background: none;
+    border: none;
+    font-size: 1.5rem;
+    color: var(--primary-color);
+    cursor: pointer;
+  }
+  
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -280px;
+    width: 280px;
+    height: 100vh;
+    z-index: 100;
+    transition: left 0.3s ease;
+  }
+  
+  .sidebar.open {
+    left: 0;
+  }
+  
+  .mobile-overlay {
+    display: block;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100vw;
+    height: 100vh;
+    background: rgba(0,0,0,0.5);
+    z-index: 90;
+  }
+
+  .main-content {
+    width: 100%;
+  }
+
+  .container {
+    padding: 1rem;
+  }
+
+  /* Make sure header stack correctly */
+  .animate-fade-in > div:first-child {
+    flex-direction: column;
+    align-items: flex-start !important;
+    gap: 1rem;
+  }
+  
+  /* Make sure charts resize */
+  .recharts-responsive-container {
+    min-height: 300px;
+  }
 }
